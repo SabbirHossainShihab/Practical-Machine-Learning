@@ -1,0 +1,113 @@
+---
+title: "Machine Learning Project"
+author: "Mike Wehinger"
+date: "24 June 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(caret)
+setwd("C:/Users/Mike/OneDrive/MOOCs/ML/project")
+```
+
+## Exercise Efficacy 
+
+
+This is a machine learning model to predict how well someone preforms a weight lifting exercise. Movements are tracked through accelerometers in wearable devices (such as a Jawbone Up, Nike FuelBand, and Fitbit). A study was conducted where data was collected and classified measurements taken when someone performs the exercise properly (Class A) as well as when the exercise is done with common mistakes (Classes B to E). 
+
+The following is an approach to building the best predictive model: 
+
+1. Retrieving and Preparing Data
+2. Cross Validation
+3. Building Models
+4. Evaluating Model Accuracies  
+5. Predicting Results from a Testing Dataset 
+
+# Retrieving & Preparing Data
+
+The data and its description is available from <http://groupware.les.inf.puc-rio.br/har>. For this assignment, the data is downloaded and stored locally in two files. The file, pml-training.csv is for training the model. The file, pml-ttesting.csv is data to be classified (predicted) by the model. 
+
+```{r prepData, cache=TRUE}
+# Load datasets and convert missing data into N/A
+training <- read.csv("pml-training.csv", na.strings=c("","NA", "#DIV/0!"))
+testing <- read.csv("pml-testing.csv", na.strings=c("","NA", "#DIV/0!"))
+
+# Remove columns that are not predictors
+
+#the first five columns include non-predicting values (names, timestamps, etc.)
+trainingPs <- training[,-(1:5)]
+
+# remove predictors with data that does not vary (all values are roughly the same)
+trainingPs <- trainingPs[,-nearZeroVar(trainingPs, saveMetrics = FALSE)]
+
+# remove columns that have NAa 
+rem.columns <- names(which(colSums(is.na(trainingPs))>0))
+trainingPs <- trainingPs[, !(names(trainingPs) %in% rem.columns)]
+```
+
+# Cross Validation
+Split the cleaned data into a training and validation set,
+```{r CrossVal, cache=TRUE}
+inTrain <- createDataPartition(y=trainingPs$classe, p=.7, list= FALSE)
+trainingSet <- trainingPs[inTrain,]
+validationSet <- trainingPs[-inTrain,]
+```
+
+Summary of training and validation datasets...
+```{r CrossValSummary, cache=TRUE}
+CrossValSummary <- rbind(Original_data = dim(trainingPs), training_subset = dim(trainingSet), validation_subset = dim(validationSet))
+colnames(CrossValSummary) <- c("Observations", "Predictors")
+CrossValSummary
+```
+
+# Building Models
+Build two models using different methodologies: random forest and generalized boosting model. Both are tree-based classification models from the caret package.
+```{r rfMod, cache=TRUE, results="hide"}
+# fit a random forest model (Ths takes a LONG time!) and gbm - knitting html on global variables
+# modFit <- train(classe~., data=trainingSet, method="rf", prox=TRUE)
+# modFit_gbm <- train(classe~., data=trainingSet, method="gbm", verbose=FALSE)
+```
+
+Both methodologies zero in on an optimal model and have an accuracy measure. .996 for random forest and .983 for the GBM. Additionally, the random forest model offers an out of bag error estimate of .18% (e.g. an out-of sample error rate). 
+
+# Evaluating Model Accuracies
+
+To evaluate the two models, we will use the validation data subset to predict the classification and compare the predicted classification with the true classification. 
+
+1. Random Forest Model:
+
+```{r predictValid_rf}
+#First for the Random Forest Model
+Predict_rf <- predict(modFit, validationSet)
+CM_RF <- confusionMatrix(Predict_rf, validationSet$classe)
+CM_RF$overall
+```
+The random forest model has the best accuracy of the two.
+
+2. GBM Model:
+```{r predictValid_gbm}
+# Second for the GBM model
+Predict_gbm <- predict(modFit_gbm, validationSet)
+CM_GBM <- confusionMatrix(Predict_gbm, validationSet$classe)
+CM_GBM$overall
+```
+The GBM model has good accuracy, but not quite as good as random forest.
+
+The tables below show how each model predicted the validation dataset across the classifications
+```{r predictValid compare}
+CM_RF$table
+CM_GBM$table
+```
+
+The random forest method was better across all classifications.
+
+
+# Predicting Results from a Testing Dataset
+Predictions using the random forest methodology:
+```{r predict new classe}
+modelPredictions <- predict(modFit, testing)
+cbind(testing[,1:2], classe = modelPredictions)
+```
+
