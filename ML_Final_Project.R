@@ -1,7 +1,7 @@
 
 # Getting Started
 library(caret)
-setwd("C:/Users/Mike/OneDrive/MOOCs/ML/project")
+setwd("C:/Users/SabbirHossainRuet/OneDrive/MOOCs/ML/project")
 
 
 # Load datasets and convert missing data into N/A
