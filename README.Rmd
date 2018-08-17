@@ -1,7 +1,7 @@
 ---
 title: "Machine Learning Project"
-author: "Mike Wehinger"
-date: "24 June 2017"
+author: "Sabbir Hossain Shihab"
+date: "17 August 2018"
 output: html_document
 ---
 
@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(caret)
-setwd("C:/Users/Mike/OneDrive/MOOCs/ML/project")
+setwd("C:/Users/SabbirHossainRuet/OneDrive/MOOCs/ML/project")
 ```
 
 ## Exercise Efficacy 
